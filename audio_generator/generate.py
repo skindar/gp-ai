@@ -16,5 +16,5 @@ audio = client.audio.speech.create(
                 input=answer,
                 )
 
-with open(f"../backend/audio/{now}.mp3", 'wb') as f:
+with open(f"../backend/audio-idle/{now}.mp3", 'wb') as f:
     f.write(audio.content)
