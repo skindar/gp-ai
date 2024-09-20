@@ -3,7 +3,7 @@ from datetime import datetime
 from openai import OpenAI
 open_key = os.environ.get('OPENAI_API_KEY')
 client = OpenAI(api_key=open_key)
-answer = """Hello, I am Global Predictor AI. Curious to know what insights I have for you today?
+answer = """Hello, I'm GP, your Global Predictor AI. Want to see what I foresee for you?
 """
 string_to_replace = ['-',':',' ','.']
 now = str(datetime.now())

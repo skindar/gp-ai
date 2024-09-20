@@ -97,6 +97,9 @@
             50% { opacity: 1; }
         }
         #startButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
             padding: 15px 30px;
             font-size: 20px;
             background-color: rgba(0, 170, 255, 0.1);
@@ -108,8 +111,8 @@
             box-shadow: 0 0 20px #0af;
             text-transform: uppercase;
             letter-spacing: 3px;
-            position: relative;
             overflow: hidden;
+            z-index: 1000;
         }
         #startButton::before {
             content: '';
@@ -169,14 +172,13 @@
     </style>
 </head>
 <body>
+    <button id="startButton">Start</button>
     <div class="container">
         <div class="overlay">
             <div class="sphere">
                 <div class="oracle-text" id="oracleText">GP: Oracle</div>
                 <div class="audio-visualizer" id="visualizer"></div>
             </div>
-            <!-- Remove the button -->
-            <!-- <button id="startButton">Ask GP</button> -->
         </div>
         <div class="cosmic-particles" id="particles"></div>
     </div>
@@ -185,132 +187,6 @@
         <source src="" type="audio/mpeg">
     </audio>
 
-    <script>
-        const BASE_URL = 'http://localhost';
-        const BASE_PORT = '8080';
-
-        const audioTrack = document.getElementById('audioTrack');
-        const oracleText = document.getElementById('oracleText');
-        const visualizer = document.getElementById('visualizer');
-        const particles = document.getElementById('particles');
-        let currentAudio = null;
-
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-
-        const numCircles = 50;
-        for (let i = 0; i < numCircles; i++) {
-            const circle = document.createElement('div');
-            circle.classList.add('visualizer-circle');
-            visualizer.appendChild(circle);
-        }
-
-        function createParticles() {
-            for (let i = 0; i < 50; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                particle.style.width = `${Math.random() * 5 + 1}px`;
-                particle.style.height = particle.style.width;
-                particle.style.left = `${Math.random() * 100}%`;
-                particle.style.top = `${Math.random() * 100}%`;
-                particle.style.animationDuration = `${Math.random() * 10 + 5}s`;
-                particle.style.animationDelay = `${Math.random() * 5}s`;
-                particles.appendChild(particle);
-            }
-        }
-
-        function updateVisualizer() {
-            analyser.getByteFrequencyData(dataArray);
-            const circles = visualizer.getElementsByClassName('visualizer-circle');
-            const centerX = visualizer.clientWidth / 2;
-            const centerY = visualizer.clientHeight / 2;
-            const maxRadius = Math.min(centerX, centerY);
-
-            for (let i = 0; i < numCircles; i++) {
-                const value = dataArray[i] / 255;
-                const circle = circles[i];
-                const size = value * maxRadius * 2;
-                const opacity = value * 0.5 + 0.1;
-
-                circle.style.width = `${size}px`;
-                circle.style.height = `${size}px`;
-                circle.style.left = `${centerX - size / 2}px`;
-                circle.style.top = `${centerY - size / 2}px`;
-                circle.style.opacity = opacity;
-            }
-            requestAnimationFrame(updateVisualizer);
-        }
-
-        function playAudio() {
-            oracleText.textContent = "Processing Query...";
-            audioTrack.play().then(() => {
-                const source = audioContext.createMediaElementSource(audioTrack);
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-                updateVisualizer();
-            }).catch(error => console.error('Error initializing audio:', error));
-
-            audioTrack.onended = () => {
-                oracleText.textContent = "Ready for Next Query";
-                setTimeout(checkForNewMedia, 5000);
-            };
-        }
-
-        function updateMedia() {
-            audioTrack.src = `${BASE_URL}:${BASE_PORT}/audio/${currentAudio}`;
-        }
-
-        function checkForNewMedia() {
-            fetch(`${BASE_URL}:${BASE_PORT}/checkNewMedia`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.file !== currentAudio) {
-                        currentAudio = data.file;
-                        updateMedia();
-                        playAudio();
-                        return fetch(`${BASE_URL}:${BASE_PORT}/getAnswer`);
-                    } else {
-                        oracleText.textContent = "GP: Oracle";
-                        return Promise.reject('No new media');
-                    }
-                })
-                .then(response => response.json())
-                .then(answerData => {
-                    // Update the sphere color based on the sentiment
-                    updateSphereColor(answerData.sentiment);
-                })
-                .catch(error => console.error('Error in data retrieval:', error));
-        }
-
-        function updateSphereColor(sentiment) {
-            const sphere = document.querySelector('.sphere');
-            let color;
-            switch(sentiment) {
-                case 'positive':
-                    color = '#00ff00'; // Green
-                    break;
-                case 'negative':
-                    color = '#ff0000'; // Red
-                    break;
-                default:
-                    color = '#ffffff'; // White for neutral
-            }
-            sphere.style.background = `radial-gradient(circle at 30% 30%, ${color}, #003)`;
-            sphere.style.boxShadow = `0 0 50px ${color}, 0 0 100px ${color}`;
-        }
-
-        // Call the functions directly when the page loads
-        if (audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-        currentAudio = 'idle.mp3';
-        updateMedia();
-        playAudio();
-
-        createParticles();
-    </script>
+    <script src="main.js"></script>
 </body>
 </html>
